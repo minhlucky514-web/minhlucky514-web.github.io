@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin Wheel + Fireworks</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+}
+#itemsArea {
+    width: 260px;
+    height: 120px;
+    margin: 10px 0;
+    padding: 8px;
+    font-family: monospace;
+}
+#container { position: relative; width: 500px; height: 500px; }
+canvas { position: absolute; top:0; left:0; }
+#wheelCanvas { background: transparent; z-index: 1; }
+#fireCanvas { background: transparent; z-index: 101; pointer-events: none; }
+button#spinCenter {
+    width: 80px; height: 80px; border-radius: 50%; border: none;
+    background: #ff5050; color: #fff; font-size: 18px; font-weight: bold;
+    cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 2;
+    transition: transform 0.1s, background 0.3s, color 0.3s;
+}
+button#spinCenter:hover { transform: translate(-50%, -50%) scale(1.1); }
+
+#alertDialog {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: linear-gradient(135deg,#ffeb3b,#ff9800);
+    color: #4a148c; padding: 15px 25px; border-radius: 12px; font-size: 1.5em;
+    font-weight: bold; text-align: center; box-shadow: 0 0 20px rgba(255,235,59,0.8);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease, background 0.3s, color 0.3s;
+    z-index: 5; white-space: nowrap;
+}
+#alertDialog.show { opacity:1; pointer-events:auto; }
+#alertDialog .alertText { display:inline-block; transition: color 0.3s; }
+#alertDialog .closeBtn {
+    position: absolute; top: 5px; right: 8px; font-size: 1.2em;
+    background: transparent; border: none; color: #4a148c; cursor: pointer; font-weight: bold;
+    transition: color 0.3s;
+}
+#alertDialog .closeBtn:hover { color: #b71c1c; }
+
+#result { margin-top: 20px; font-size: 1.4em; font-weight: bold; color: #ffd700; transition: color 0.3s; }
+</style>
+</head>
+<body>
+<textarea id="itemsArea" placeholder="Mỗi dòng một mục..."></textarea><br>
+<div id="container">
+    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+    <canvas id="fireCanvas" width="500" height="500"></canvas>
+    <button id="spinCenter">SPIN</button>
+    <div id="alertDialog">
+        <span class="alertText" id="alertText"></span>
+        <button class="closeBtn">&times;</button>
+    </div>
+</div>
+<div id="result"></div>
+
+<script>
+const wheel = document.getElementById('wheelCanvas');
+const ctx = wheel.getContext('2d');
+const fire = document.getElementById('fireCanvas');
+const fctx = fire.getContext('2d');
+const itemsArea = document.getElementById('itemsArea');
+const spinCenter = document.getElementById('spinCenter');
+const alertDialog = document.getElementById('alertDialog');
+const alertText = document.getElementById('alertText');
+const closeBtn = alertDialog.querySelector('.closeBtn');
+const resultDiv = document.getElementById('result');
+
+let items = [];
+let rotation = 0;
+let spinning = false;
+let dialogVisible = false;
+let animationFrameId = null;
+let fireAnimationFrameId = null;
+let lastClick = 0;
+
+// Màu lấp lánh
+let hueOffset = 0;
+
+// Parse text
+function parseText(t){ return t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); }
+
+// Draw wheel với gradient đổi màu theo thời gian
+function drawWheel(){
+    const w=wheel.width,h=wheel.height,r=Math.min(w,h)/2-10;
+    ctx.clearRect(0,0,w,h);
+    ctx.save();
+    ctx.translate(w/2,h/2);
+    ctx.rotate(rotation);
+    const slice=2*Math.PI/(items.length||1);
+
+    for(let i=0;i<(items.length||1);i++){
+        const start=i*slice;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,r,start,start+slice);
+        const hue=(i*40+hueOffset)%360;
+        const grd=ctx.createLinearGradient(-r,-r,r,r);
+        grd.addColorStop(0, `hsl(${hue},70%,55%)`);
+        grd.addColorStop(1, `hsl(${(hue+60)%360},80%,65%)`);
+        ctx.fillStyle=grd;
+        ctx.fill();
+        ctx.save();
+        ctx.rotate(start+slice/2);
+        ctx.fillStyle='#fff';
+        ctx.font='16px sans-serif';
+        ctx.textAlign='right';
+        ctx.fillText(items[i]||'',r-10,5);
+        ctx.restore();
+    }
+    ctx.restore();
+
+    // Arrow kim
+    const arrowHue = (hueOffset+180)%360;
+    ctx.fillStyle = `hsl(${arrowHue}, 80%, 60%)`;
+    ctx.beginPath();
+    ctx.moveTo(w/2,10);
+    ctx.lineTo(w/2-15,40);
+    ctx.lineTo(w/2+15,40);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// Spin
+function spin(){
+    if(spinning||items.length===0||dialogVisible) return;
+    spinning=true;
+    cancelAnimationFrame(animationFrameId);
+    cancelAnimationFrame(fireAnimationFrameId);
+    fctx.clearRect(0,0,fire.width,fire.height);
+    particles=[];
+    rotation=0;
+
+    const slice=2*Math.PI/items.length;
+    const target=Math.floor(Math.random()*items.length);
+    const finalAngle=(2*Math.PI-(target*slice+slice/2))%(2*Math.PI);
+    const extra=36*2*Math.PI+Math.random()*Math.PI;
+    const start=rotation;
+    const diff=finalAngle-start+extra;
+    const st=performance.now();
+    const spinDuration = 5000; // cực nhanh
+
+    function animate(t){
+        const p=Math.min(1,(t-st)/spinDuration);
+        const ease=1-Math.pow(1-p,3);
+        rotation=start+diff*ease;
+        drawWheel();
+        if(p<1){
+            animationFrameId=requestAnimationFrame(animate);
+        }else{
+            const normalized=(rotation+Math.PI/2)%(2*Math.PI);
+            let winIndex=Math.floor(normalized/slice);
+            winIndex=(items.length-winIndex-1+items.length)%items.length;
+            const winItem=items[winIndex];
+            showAlert(winItem);
+            resultDiv.textContent=`Kết quả: ${winItem}`;
+            launchFireworks();
+            spinning=false;
+        }
+    }
+    animationFrameId=requestAnimationFrame(animate);
+}
+
+// Update items
+function update(){ items=parseText(itemsArea.value); drawWheel(); }
+
+// Alert
+function showAlert(item){
+    alertText.textContent=`🎯 ${item} - đã bị dí! 🚨`;
+    alertDialog.classList.add('show');
+    dialogVisible=true;
+}
+
+// Hide alert
+function hideAlert(){
+    alertDialog.classList.remove('show');
+    dialogVisible=false;
+}
+
+// Close button
+closeBtn.addEventListener('click',hideAlert);
+
+// Fireworks
+let particles=[];
+function launchFireworks(){
+    particles=[];
+    for(let i=0;i<25;i++){
+        particles.push({
+            x:fire.width/2,
+            y:fire.height/2,
+            angle:Math.random()*2*Math.PI,
+            speed:Math.random()*5+3,
+            radius:Math.random()*3+2,
+            life:Math.random()*30+15,
+            color:`hsl(${Math.random()*360},80%,60%)`
+        });
+    }
+    fireAnimationFrameId=requestAnimationFrame(fireAnimate);
+}
+function fireAnimate(){
+    fctx.clearRect(0,0,fire.width,fire.height);
+    for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i];
+        p.x+=Math.cos(p.angle)*p.speed;
+        p.y+=Math.sin(p.angle)*p.speed;
+        p.speed*=0.9; p.radius*=0.95; p.life--;
+        fctx.beginPath(); fctx.fillStyle=p.color; fctx.arc(p.x,p.y,p.radius,0,2*Math.PI); fctx.fill();
+        if(p.life<=0) particles.splice(i,1);
+    }
+    if(particles.length>0) fireAnimationFrameId=requestAnimationFrame(fireAnimate);
+}
+
+// Animation màu lấp lánh cho bánh xe, nút, dialog và kết quả
+function animateHue(){
+    hueOffset+=1;
+    if(hueOffset>360) hueOffset=0;
+    drawWheel();
+    // Update nút SPIN
+    const btnHue = (hueOffset+30)%360;
+    spinCenter.style.background = `hsl(${btnHue},70%,55%)`;
+    spinCenter.style.color = `hsl(${(btnHue+180)%360},80%,95%)`;
+    // Update dialog
+    const dialogHue = (hueOffset+60)%360;
+    alertDialog.style.background = `linear-gradient(135deg,hsl(${dialogHue},70%,65%), hsl(${(dialogHue+60)%360},80%,70%))`;
+    alertText.style.color = `hsl(${(dialogHue+180)%360},80%,50%)`;
+    closeBtn.style.color = `hsl(${(dialogHue+200)%360},70%,40%)`;
+    // Update kết quả
+    const resultHue = (hueOffset+90)%360;
+    resultDiv.style.color = `hsl(${resultHue},80%,60%)`;
+    requestAnimationFrame(animateHue);
+}
+
+// Debounce click
+spinCenter.addEventListener('click',()=>{
+    const now=Date.now();
+    if(now-lastClick<300) return;
+    lastClick=now;
+    spin();
+});
+
+itemsArea.addEventListener('input',update);
+update();
+animateHue();
+</script>
+</body>
+</html>
