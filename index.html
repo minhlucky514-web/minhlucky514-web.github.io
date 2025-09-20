@@ -149,7 +149,7 @@ function spin(){
     const slice=2*Math.PI/items.length;
     const target=Math.floor(Math.random()*items.length);
     const finalAngle=(2*Math.PI-(target*slice+slice/2))%(2*Math.PI);
-    const extra=6*2*Math.PI+Math.random()*Math.PI;
+    const extra=12*2*Math.PI+Math.random()*Math.PI;
     const start=rotation;
     const diff=finalAngle-start+extra;
     const st=performance.now();
