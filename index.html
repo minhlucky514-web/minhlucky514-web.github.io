@@ -63,9 +63,11 @@ body {
     width: 100px;
     height: 100px;
     border-radius: 50%;       /* tròn */
-    object-fit: contain;      /* giữ tỉ lệ gốc, vừa khung */
-    background: #000;         /* nền tối nếu ảnh nhỏ hơn khung */
+    background: #000;         /* nền tối nếu ảnh nhỏ */
+    padding: 5px;             /* optional, tạo khoảng cách */
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    object-fit: contain;      /* giữ tỉ lệ, vừa khung */
+    display: block;
 }
 .side-img:hover { transform: scale(1.05); }
 
