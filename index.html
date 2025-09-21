@@ -13,7 +13,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    z-index: -1; /* nằm dưới tất cả */
+    z-index: -1;
 }
 .video-bg video {
     width: 100%;
@@ -55,17 +55,17 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px; /* khoảng cách giữa ảnh và vòng quay */
+    gap: 20px;
     margin-top: 10px;
     z-index: 2;
 }
 .side-img {
-    display: block;           /* Loại bỏ khoảng trắng dưới ảnh */
-    width: 100px;              /* chiều rộng cố định */
-    height: auto;             /* giữ tỉ lệ */
-    object-fit: contain;      /* Fit toàn bộ nhân vật trong khung */
-    background-color: transparent; /* Nền trong suốt */
-    border-radius: 0;         /* Không bo tròn viền */
+    display: block;
+    width: 100px;
+    height: auto;
+    object-fit: contain;
+    background-color: transparent;
+    border-radius: 0;
 }
 .side-img:hover { transform: scale(1.05); }
 
@@ -124,7 +124,7 @@ button#spinCenter:hover { transform: translate(-50%, -50%) scale(1.1); }
     z-index: 2;
 }
 
-/* ===== NÚT MỞ PDF ===== */
+/* ===== NÚT MỞ PDF / HÌNH ẢNH ===== */
 #pdfButtons {
     margin-top: 20px;
     display: flex;
@@ -137,15 +137,13 @@ button#spinCenter:hover { transform: translate(-50%, -50%) scale(1.1); }
     font-weight: bold;
     border: none;
     border-radius: 8px;
-    background: #4caf50;
+    background: hsl(120,70%,55%);
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s, background 0.3s;
+    transition: transform 0.2s, background 0.3s, color 0.3s;
 }
-.pdfBtn:hover {
-    transform: scale(1.05);
-    background: #45a049;
-}
+.pdfBtn:hover { transform: scale(1.05); }
+
 </style>
 </head>
 <body>
@@ -176,10 +174,8 @@ Shiraki
 
 <!-- ===== HÀNG CHÍNH: ẢNH TRÁI - VÒNG QUAY - ẢNH PHẢI ===== -->
 <div id="mainRow">
-    <!-- ẢNH TRÁI -->
     <img src="./assets/images/ojigi.webp" alt="Left" class="side-img" id="leftImg">
     
-    <!-- VÒNG QUAY -->
     <div id="wheelContainer">
         <canvas id="wheelCanvas" width="500" height="500"></canvas>
         <canvas id="fireCanvas" width="500" height="500"></canvas>
@@ -190,16 +186,15 @@ Shiraki
         </div>
     </div>
     
-    <!-- ẢNH PHẢI -->
     <img src="./assets/images/ojigi.webp" alt="Right" class="side-img" id="rightImg">
 </div>
 
 <div id="result"></div>
 
-<!-- ===== NÚT MỞ PDF ===== -->
+<!-- ===== NÚT MỞ PDF / HÌNH ẢNH ===== -->
 <div id="pdfButtons">
     <button class="pdfBtn" onclick="openPDF('./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf')">朝礼の流れ</button>
-    <button class="pdfBtn" onclick="openPDF('./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf')">Mở PDF 2</button>
+    <button class="pdfBtn" onclick="openPDF('./assets/images/画像.png')">朝礼の順番</button>
 </div>
 
 <script>
@@ -347,17 +342,28 @@ function fireAnimate(){
 function animateHue(){
     hueOffset+=1;
     if(hueOffset>360) hueOffset=0;
+
     drawWheel();
+
     const btnHue = (hueOffset+30)%360;
     spinCenter.style.background = `hsl(${btnHue},70%,55%)`;
     spinCenter.style.color = `hsl(${(btnHue+180)%360},80%,95%)`;
+
     const dialogHue = (hueOffset+60)%360;
     alertDialog.style.background =
         `linear-gradient(135deg,hsl(${dialogHue},70%,65%), hsl(${(dialogHue+60)%360},80%,70%))`;
     alertText.style.color = `hsl(${(dialogHue+180)%360},80%,50%)`;
     closeBtn.style.color = `hsl(${(dialogHue+200)%360},70%,40%)`;
+
     const resultHue = (hueOffset+90)%360;
     resultDiv.style.color = `hsl(${resultHue},80%,60%)`;
+
+    const pdfBtnHue = (hueOffset+45)%360;
+    document.querySelectorAll('.pdfBtn').forEach(btn=>{
+        btn.style.background = `hsl(${pdfBtnHue},70%,55%)`;
+        btn.style.color = `hsl(${(pdfBtnHue+180)%360},80%,95%)`;
+    });
+
     requestAnimationFrame(animateHue);
 }
 
@@ -372,10 +378,7 @@ itemsArea.addEventListener('input',update);
 update();
 animateHue();
 
-// ===== MỞ PDF =====
-function openPDF(path){
-    window.open(path, '_blank');
-}
+function openPDF(path){ window.open(path, '_blank'); }
 </script>
 </body>
 </html>
