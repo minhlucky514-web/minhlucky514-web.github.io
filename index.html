@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spin Wheel + Flipbook PDF</title>
+<title>Spin Wheel + Flipbook + Sakura Video</title>
 
-<!-- VIDEO BACKGROUND -->
+<!-- ST-PAGEFLIP CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/st-pageflip/dist/css/page-flip.min.css">
+
 <style>
+/* ===== VIDEO BACKGROUND ===== */
 .video-bg {
     position: fixed;
     top:0; left:0;
@@ -19,121 +22,134 @@
     object-fit:cover;
 }
 
-/* BODY & LAYOUT */
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
+/* ===== BODY ===== */
+body {
+    margin:0; padding:20px;
+    font-family: Arial, sans-serif;
     color:#eee;
-    display:flex;
-    flex-direction:column;
+    display:flex; flex-direction:column;
     align-items:center;
     min-height:100vh;
     background:transparent;
 }
 
-/* ITEMS TEXTAREA */
-#itemsArea{
-    width:300px;
-    max-width:90vw;
-    height:120px;
-    margin:10px 0;
-    padding:8px;
-    font-family:monospace;
-    background:rgba(0,0,0,0.5);
+/* ===== DANH SÁCH ITEM ===== */
+#itemsArea {
+    width: 260px;
+    max-width: 80vw;
+    height: 120px;
+    padding: 8px;
+    margin-bottom: 15px;
+    font-family: monospace;
+    background: rgba(0,0,0,0.5);
     color:#fff;
     border:none;
     border-radius:8px;
 }
 
-/* MAIN ROW */
-#mainRow{
+/* ===== HÀNG CHÍNH ===== */
+#mainRow {
     display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:20px;
     flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+    width:100%;
 }
-.side-img{
-    width:80px;
+
+.side-img {
+    width: 100px;
     height:auto;
     object-fit:contain;
+    transition: transform 0.2s;
 }
+.side-img:hover { transform: scale(1.05); }
 
-/* WHEEL */
-#wheelContainer{
-    position:relative;
-    width:80vw;
-    max-width:500px;
-    aspect-ratio:1/1;
+#wheelContainer {
+    position: relative;
+    max-width: 90vw;
+    width: 500px;
+    aspect-ratio: 1;
 }
-canvas{
-    position:absolute;
-    top:0; left:0;
-    width:100%;
-    height:100%;
-}
-button#spinCenter{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:15%;
-    min-width:70px;
-    aspect-ratio:1/1;
-    border-radius:50%;
-    border:none;
-    font-size:1em;
-    font-weight:bold;
-    cursor:pointer;
-}
+canvas { position: absolute; top:0; left:0; width:100%; height:100%; }
 
-/* PDF BUTTON */
-#pdfButtons{
-    margin:15px 0;
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-}
-.pdfBtn{
-    padding:10px 15px;
-    font-size:16px;
-    font-weight:bold;
-    border:none;
-    border-radius:8px;
+#spinCenter {
+    position:absolute; top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    width:80px; height:80px;
+    border-radius:50%; border:none;
+    font-size:18px; font-weight:bold;
     cursor:pointer;
-    transition:background 0.3s,color 0.3s,transform 0.2s;
+    z-index:2;
+    transition: transform 0.1s, background 0.3s, color 0.3s;
 }
+#spinCenter:hover { transform: translate(-50%,-50%) scale(1.1); }
+
+/* ALERT */
+#alertDialog {
+    position:absolute; top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    background: linear-gradient(135deg,#ffeb3b,#ff9800);
+    color: #4a148c;
+    padding:15px 25px;
+    border-radius:12px;
+    font-size:1.5em;
+    font-weight:bold;
+    text-align:center;
+    box-shadow:0 0 20px rgba(255,235,59,0.8);
+    opacity:0; pointer-events:none;
+    transition:opacity 0.3s ease, background 0.3s, color 0.3s;
+    z-index:5;
+    white-space:nowrap;
+}
+#alertDialog.show { opacity:1; pointer-events:auto; }
+#alertDialog .alertText { display:inline-block; transition:color 0.3s; }
+#alertDialog .closeBtn {
+    position:absolute; top:5px; right:8px;
+    font-size:1.2em; background:transparent;
+    border:none; cursor:pointer; font-weight:bold;
+}
+#alertDialog .closeBtn:hover { color:#b71c1c; }
 
 /* RESULT */
-#result{
+#result {
     margin-top:15px;
-    font-size:1.2em;
+    font-size:1.4em;
     font-weight:bold;
+    color:#ffd700;
 }
 
-/* PDF FLIPBOOK MODAL */
-#pdfModal{
-    display:none;
+/* ===== NÚT PDF/IMAGE ===== */
+#pdfButtons {
+    margin-top:20px;
+    display:flex; flex-wrap:wrap; gap:20px;
+}
+.pdfBtn {
+    padding:10px 20px;
+    font-size:16px;
+    font-weight:bold;
+    border:none; border-radius:8px;
+    background:hsl(120,70%,55%);
+    color:#fff;
+    cursor:pointer;
+    transition: transform 0.2s, background 0.3s, color 0.3s;
+}
+.pdfBtn:hover { transform: scale(1.05); }
+
+/* ===== FLIPBOOK MODAL ===== */
+#flipbookModal {
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
-    background:rgba(0,0,0,0.8);
-    justify-content:center;
-    align-items:center;
+    background: rgba(0,0,0,0.8);
+    display:none; justify-content:center; align-items:center;
     z-index:10;
-    flex-direction:column;
 }
-#pdfModal.active{display:flex;}
-#flipbookContainer{
-    width:80%;
-    max-width:800px;
-    height:80%;
+#flipbookContainer {
+    width:90%; max-width:800px; height:80%;
+    background:#fff;
 }
-#closePdf{
-    margin-top:10px;
-    padding:5px 10px;
-    font-size:1em;
-}
+.closeFlip { position:absolute; top:10px; right:20px; font-size:2em; color:#fff; cursor:pointer; z-index:11; }
 </style>
 </head>
 <body>
@@ -145,8 +161,9 @@ button#spinCenter{
     </video>
 </div>
 
-<!-- ITEMS -->
-<textarea id="itemsArea">Hưng
+<!-- DANH SÁCH -->
+<textarea id="itemsArea" placeholder="Mỗi dòng một mục...">
+Hưng
 Kiệt
 Khoa
 Dũng
@@ -157,135 +174,216 @@ Giang
 Công
 Cường
 Thiện
-Shiraki</textarea>
+Shiraki
+</textarea>
 
-<!-- WHEEL -->
+<!-- MAIN ROW -->
 <div id="mainRow">
     <img src="./assets/images/ojigi.webp" class="side-img">
     <div id="wheelContainer">
-        <canvas id="wheelCanvas"></canvas>
-        <canvas id="fireCanvas"></canvas>
+        <canvas id="wheelCanvas" width="500" height="500"></canvas>
+        <canvas id="fireCanvas" width="500" height="500"></canvas>
         <button id="spinCenter">SPIN</button>
+        <div id="alertDialog">
+            <span class="alertText" id="alertText"></span>
+            <button class="closeBtn">&times;</button>
+        </div>
     </div>
     <img src="./assets/images/ojigi.webp" class="side-img">
 </div>
+
 <div id="result"></div>
 
-<!-- PDF BUTTON -->
+<!-- BUTTONS -->
 <div id="pdfButtons">
-    <button class="pdfBtn" data-path="./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf">PDF Flipbook</button>
+    <button class="pdfBtn" data-pdf="./assets/pdfs/sample.pdf">Xem Flipbook</button>
+    <button class="pdfBtn" onclick="openPDF('./assets/images/画像.png')">Ảnh</button>
 </div>
 
-<!-- PDF FLIPBOOK MODAL -->
-<div id="pdfModal">
+<!-- FLIPBOOK MODAL -->
+<div id="flipbookModal">
+    <div class="closeFlip">&times;</div>
     <div id="flipbookContainer"></div>
-    <button id="closePdf">Close</button>
 </div>
 
-<!-- LIBRARIES -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.14.2/pdf.min.js"></script>
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/st-pageflip/dist/js/page-flip.browser.min.js"></script>
 
 <script>
-// === WHEEL LOGIC ===
-const wheel = document.getElementById('wheelCanvas');
-const ctx = wheel.getContext('2d');
-const itemsArea = document.getElementById('itemsArea');
-const spinCenter = document.getElementById('spinCenter');
-const resultDiv = document.getElementById('result');
-let items=[], rotation=0, spinning=false, hueOffset=0;
+/* ===== SPIN WHEEL ===== */
+const wheel=document.getElementById('wheelCanvas');
+const ctx=wheel.getContext('2d');
+const fire=document.getElementById('fireCanvas');
+const fctx=fire.getContext('2d');
+const itemsArea=document.getElementById('itemsArea');
+const spinCenter=document.getElementById('spinCenter');
+const alertDialog=document.getElementById('alertDialog');
+const alertText=document.getElementById('alertText');
+const closeBtn=alertDialog.querySelector('.closeBtn');
+const resultDiv=document.getElementById('result');
+let items=[], rotation=0, spinning=false, dialogVisible=false;
+let animationFrameId=null, fireAnimationFrameId=null, lastClick=0, hueOffset=0;
 
 function parseText(t){ return t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); }
 function drawWheel(){
-    const w=wheel.width=wheel.offsetWidth;
-    const h=wheel.height=wheel.offsetHeight;
-    const r=Math.min(w,h)/2-10;
+    const w=wheel.width,h=wheel.height,r=Math.min(w,h)/2-10;
     ctx.clearRect(0,0,w,h);
     ctx.save(); ctx.translate(w/2,h/2); ctx.rotate(rotation);
     const slice=2*Math.PI/(items.length||1);
     for(let i=0;i<(items.length||1);i++){
-        ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*slice,(i+1)*slice);
+        const start=i*slice;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,r,start,start+slice);
         const hue=(i*40+hueOffset)%360;
-        ctx.fillStyle=`hsl(${hue},70%,55%)`; ctx.fill();
-        ctx.save(); ctx.rotate(i*slice+slice/2);
+        const grd=ctx.createLinearGradient(-r,-r,r,r);
+        grd.addColorStop(0, `hsl(${hue},70%,55%)`);
+        grd.addColorStop(1, `hsl(${(hue+60)%360},80%,65%)`);
+        ctx.fillStyle=grd;
+        ctx.fill();
+        ctx.save(); ctx.rotate(start+slice/2);
         ctx.fillStyle='#fff'; ctx.font='16px sans-serif'; ctx.textAlign='right';
-        ctx.fillText(items[i]||'',r-10,5);
-        ctx.restore();
+        ctx.fillText(items[i]||'',r-10,5); ctx.restore();
     }
     ctx.restore();
+    const arrowHue=(hueOffset+180)%360;
+    ctx.fillStyle=`hsl(${arrowHue},80%,60%)`;
+    ctx.beginPath(); ctx.moveTo(w/2,10); ctx.lineTo(w/2-15,40); ctx.lineTo(w/2+15,40); ctx.closePath(); ctx.fill();
 }
 
 function spin(){
-    if(spinning || items.length===0) return;
+    if(spinning||items.length===0||dialogVisible) return;
     spinning=true;
+    cancelAnimationFrame(animationFrameId);
+    cancelAnimationFrame(fireAnimationFrameId);
+    fctx.clearRect(0,0,fire.width,fire.height);
+    particles=[]; rotation=0;
     const slice=2*Math.PI/items.length;
     const target=Math.floor(Math.random()*items.length);
     const finalAngle=(2*Math.PI-(target*slice+slice/2))%(2*Math.PI);
-    const extra=6*2*Math.PI;
-    const start=rotation;
-    const diff=finalAngle-start+extra;
-    const st=performance.now();
+    const extra=36*2*Math.PI+Math.random()*Math.PI;
+    const start=rotation; const diff=finalAngle-start+extra;
+    const st=performance.now(); const spinDuration=5000;
     function animate(t){
-        const p=Math.min(1,(t-st)/3000);
+        const p=Math.min(1,(t-st)/spinDuration);
         const ease=1-Math.pow(1-p,3);
-        rotation=start+diff*ease; drawWheel();
-        if(p<1) requestAnimationFrame(animate);
-        else { resultDiv.textContent=`Kết quả: ${items[target]}`; spinning=false; }
+        rotation=start+diff*ease;
+        drawWheel();
+        if(p<1){ animationFrameId=requestAnimationFrame(animate); }
+        else{
+            const normalized=(rotation+Math.PI/2)%(2*Math.PI);
+            let winIndex=Math.floor(normalized/slice);
+            winIndex=(items.length-winIndex-1+items.length)%items.length;
+            const winItem=items[winIndex];
+            showAlert(winItem);
+            resultDiv.textContent=`Kết quả: ${winItem}`;
+            launchFireworks(); spinning=false;
+        }
     }
-    requestAnimationFrame(animate);
+    animationFrameId=requestAnimationFrame(animate);
 }
 
 function update(){ items=parseText(itemsArea.value); drawWheel(); }
-update();
-itemsArea.addEventListener('input',update);
-spinCenter.addEventListener('click',spin);
+function showAlert(item){ alertText.textContent=`🎯 ${item} - đã bị dí! 🚨`; alertDialog.classList.add('show'); dialogVisible=true; }
+function hideAlert(){ alertDialog.classList.remove('show'); dialogVisible=false; }
+closeBtn.addEventListener('click',hideAlert);
+
+let particles=[];
+function launchFireworks(){
+    particles=[];
+    for(let i=0;i<25;i++){ particles.push({
+        x:fire.width/2, y:fire.height/2,
+        angle:Math.random()*2*Math.PI,
+        speed:Math.random()*5+3,
+        radius:Math.random()*3+2,
+        life:Math.random()*30+15,
+        color:`hsl(${Math.random()*360},80%,60%)`
+    }); }
+    fireAnimationFrameId=requestAnimationFrame(fireAnimate);
+}
+function fireAnimate(){
+    fctx.clearRect(0,0,fire.width,fire.height);
+    for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i];
+        p.x+=Math.cos(p.angle)*p.speed; p.y+=Math.sin(p.angle)*p.speed;
+        p.speed*=0.9; p.radius*=0.95; p.life--;
+        fctx.beginPath(); fctx.fillStyle=p.color; fctx.arc(p.x,p.y,p.radius,0,2*Math.PI); fctx.fill();
+        if(p.life<=0) particles.splice(i,1);
+    }
+    if(particles.length>0) fireAnimationFrameId=requestAnimationFrame(fireAnimate);
+}
 
 function animateHue(){
-    hueOffset+=1; if(hueOffset>360) hueOffset=0; drawWheel();
+    hueOffset=(hueOffset+1)%360;
+    drawWheel();
     const btnHue=(hueOffset+30)%360;
     spinCenter.style.background=`hsl(${btnHue},70%,55%)`;
     spinCenter.style.color=`hsl(${(btnHue+180)%360},80%,95%)`;
+    const dialogHue=(hueOffset+60)%360;
+    alertDialog.style.background=`linear-gradient(135deg,hsl(${dialogHue},70%,65%), hsl(${(dialogHue+60)%360},80%,70%))`;
+    alertText.style.color=`hsl(${(dialogHue+180)%360},80%,50%)`;
+    closeBtn.style.color=`hsl(${(dialogHue+200)%360},70%,40%)`;
+    const resultHue=(hueOffset+90)%360;
+    resultDiv.style.color=`hsl(${resultHue},80%,60%)`;
+    const pdfBtnHue=(hueOffset+45)%360;
     document.querySelectorAll('.pdfBtn').forEach(btn=>{
-        btn.style.background=`hsl(${btnHue},70%,55%)`;
-        btn.style.color=`hsl(${(btnHue+180)%360},80%,95%)`;
+        btn.style.background=`hsl(${pdfBtnHue},70%,55%)`;
+        btn.style.color=`hsl(${(pdfBtnHue+180)%360},80%,95%)`;
     });
     requestAnimationFrame(animateHue);
 }
-animateHue();
 
-// === PDF FLIPBOOK LOGIC ===
-const pdfModal=document.getElementById('pdfModal');
-const flipbookContainer=document.getElementById('flipbookContainer');
-let pageFlip=null;
+spinCenter.addEventListener('click',()=>{
+    if(Date.now()-lastClick<300) return;
+    lastClick=Date.now();
+    spin();
+});
 
-document.querySelectorAll('.pdfBtn').forEach(btn=>{
+itemsArea.addEventListener('input',update);
+update(); animateHue();
+
+/* ===== PDF FLIPBOOK ===== */
+const flipModal=document.getElementById('flipbookModal');
+const flipContainer=document.getElementById('flipbookContainer');
+document.querySelector('.closeFlip').addEventListener('click',()=>flipModal.style.display='none');
+
+document.querySelectorAll('.pdfBtn[data-pdf]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-        const url=btn.getAttribute('data-path');
-        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.14.2/pdf.worker.min.js';
-        pdfjsLib.getDocument(url).promise.then(doc=>{
+        const url=btn.dataset.pdf;
+        flipModal.style.display='flex';
+        flipContainer.innerHTML=''; // clear old
+        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        pdfjsLib.getDocument(url).promise.then(pdf=>{
+            const totalPages=pdf.numPages;
             const pages=[];
-            const renderPage=(num)=>doc.getPage(num).then(page=>{
-                const viewport=page.getViewport({scale:1.5});
-                const canvas=document.createElement('canvas');
-                canvas.width=viewport.width; canvas.height=viewport.height;
-                const ctxc=canvas.getContext('2d');
-                page.render({canvasContext:ctxc,viewport:viewport});
-                pages.push(canvas);
+            for(let i=1;i<=totalPages;i++){
+                pages.push(document.createElement('div'));
+            }
+            const pageFlip=new St.PageFlip(flipContainer,{
+                width:600, height:800,
+                size:'stretch',
+                maxShadowOpacity:0.5,
+                showCover:true,
+                mobileScrollSupport:true
             });
-            const tasks=[];
-            for(let i=1;i<=doc.numPages;i++) tasks.push(renderPage(i));
-            Promise.all(tasks).then(()=>{
-                flipbookContainer.innerHTML=''; pages.forEach(p=>flipbookContainer.appendChild(p));
-                if(pageFlip) pageFlip.destroy();
-                pageFlip=new St.PageFlip.PageFlip(flipbookContainer, {width:400,height:500, maxShadowOpacity:0.5});
-                pageFlip.loadFromHTML(document.querySelectorAll('#flipbookContainer > canvas'));
-                pdfModal.classList.add('active');
+            pageFlip.loadFromImages(pages);
+            // render PDF to pages
+            pages.forEach((pageEl,index)=>{
+                pdf.getPage(index+1).then(page=>{
+                    const viewport=page.getViewport({scale:1.5});
+                    const canvas=document.createElement('canvas');
+                    canvas.width=viewport.width; canvas.height=viewport.height;
+                    page.render({canvasContext:canvas.getContext('2d'), viewport:viewport});
+                    pageEl.appendChild(canvas);
+                });
             });
         });
     });
 });
-document.getElementById('closePdf').addEventListener('click',()=>{pdfModal.classList.remove('active');});
-</script>
 
+/* MỞ PDF ẢNH BÌNH THƯỜNG */
+function openPDF(path){ window.open(path,'_blank'); }
+</script>
 </body>
 </html>
