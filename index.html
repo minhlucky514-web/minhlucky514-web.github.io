@@ -142,21 +142,10 @@ button#spinCenter:hover { transform: translate(-50%, -50%) scale(1.1); }
 }
 .pdfBtn:hover { transform: scale(1.05); }
 
-/* ===== FLIPBOOK CONTAINER ===== */
-#flipbookContainer {
-    display: none;
-    width: 90vw;
-    max-width: 800px;
-    height: 80vh;
-    margin: 20px auto;
-    border: 2px solid #fff;
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    z-index: 2;
-}
-#flipbookContainer.show { display: block; }
 </style>
+<link rel="stylesheet" href="./css/dflip.min.css">
+<script src="./js/jquery.min.js"></script>
+<script src="./js/dflip.min.js"></script>
 </head>
 <body>
 
@@ -207,15 +196,10 @@ Shiraki
 <div id="pdfButtons">
     <button class="pdfBtn" onclick="openPDF('./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf')">朝礼の流れ</button>
     <button class="pdfBtn" onclick="openPDF('./assets/images/画像.png')">朝礼の順番</button>
-    <button class="pdfBtn" id="openFlipbookBtn">Mở Flipbook 3D</button>
+    <div class="text-center">
+                  <div id="df_manual_thumb" class="sample book _df_thumb" source="./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf" sample="steve-jobs"  thumb="./assets/images/画像.png">Viettel Store</div>
+                </div>
 </div>
-
-<!-- ===== FLIPBOOK CONTAINER ===== -->
-<div id="flipbookContainer"></div>
-
-<!-- ===== LIBRARIES ===== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.15.349/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/st-pageflip@2.0.2/dist/js/page-flip.umd.min.js"></script>
 
 <script>
 const wheel = document.getElementById('wheelCanvas');
@@ -228,8 +212,6 @@ const alertDialog = document.getElementById('alertDialog');
 const alertText = document.getElementById('alertText');
 const closeBtn = alertDialog.querySelector('.closeBtn');
 const resultDiv = document.getElementById('result');
-const openFlipbookBtn = document.getElementById('openFlipbookBtn');
-const flipbookContainer = document.getElementById('flipbookContainer');
 
 let items = [];
 let rotation = 0;
@@ -401,63 +383,6 @@ update();
 animateHue();
 
 function openPDF(path){ window.open(path, '_blank'); }
-
-// ===== FLIPBOOK LOGIC =====
-openFlipbookBtn.addEventListener('click', async () => {
-    flipbookContainer.innerHTML = ''; // Xóa nội dung cũ
-    flipbookContainer.classList.add('show');
-
-    if (!window.PageFlip || !window.PageFlip.PageFlip) {
-        console.error('Thư viện PageFlip không được tải. Kiểm tra CDN.');
-        flipbookContainer.innerHTML = '<p>Thư viện PageFlip bị lỗi, vui lòng làm mới trang hoặc kiểm tra kết nối.</p>';
-        return;
-    }
-
-    try {
-        const pageFlip = new window.PageFlip.PageFlip(flipbookContainer, {
-            width: flipbookContainer.clientWidth,
-            height: flipbookContainer.clientHeight,
-            size: 'stretch',
-            showCover: true,
-            mobileScrollSupport: true
-        });
-
-        const pdfUrl = './assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf';
-        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-        const pages = [];
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const viewport = page.getViewport({ scale: 1.0 });
-            const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-
-            const context = canvas.getContext('2d');
-            await page.render({ canvasContext: context, viewport }).promise;
-
-            const img = document.createElement('img');
-            img.src = canvas.toDataURL('image/png');
-            img.style.width = '100%';
-            img.style.height = '100%';
-            pages.push(img);
-        }
-
-        pageFlip.loadFromHTMLArray(pages);
-        pageFlip.turnToPage(0); // Chuyển đến trang đầu tiên
-    } catch (error) {
-        console.error('Lỗi khi tải PDF hoặc khởi tạo PageFlip:', error);
-        flipbookContainer.innerHTML = '<p>Lỗi tải PDF hoặc flipbook, vui lòng kiểm tra file hoặc làm mới trang.</p>';
-    }
-});
-
-// Đóng flipbook khi click ngoài
-document.addEventListener('click', (e) => {
-    if (!flipbookContainer.contains(e.target) && flipbookContainer.classList.contains('show')) {
-        flipbookContainer.classList.remove('show');
-        flipbookContainer.innerHTML = '';
-    }
-});
 </script>
 </body>
 </html>
