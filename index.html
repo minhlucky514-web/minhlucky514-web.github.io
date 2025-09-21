@@ -61,8 +61,8 @@ body {
 }
 .side-img {
     display: block;           /* Loại bỏ khoảng trắng dưới ảnh */
-    width: 100px;              /* Giữ tỉ lệ gốc */
-    height: 100%;             /* Chiều cao fit container */
+    width: 100px;              /* chiều rộng cố định */
+    height: auto;             /* giữ tỉ lệ */
     object-fit: contain;      /* Fit toàn bộ nhân vật trong khung */
     background-color: transparent; /* Nền trong suốt */
     border-radius: 0;         /* Không bo tròn viền */
@@ -123,6 +123,29 @@ button#spinCenter:hover { transform: translate(-50%, -50%) scale(1.1); }
     position: relative;
     z-index: 2;
 }
+
+/* ===== NÚT MỞ PDF ===== */
+#pdfButtons {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+    z-index: 2;
+}
+.pdfBtn {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    background: #4caf50;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+}
+.pdfBtn:hover {
+    transform: scale(1.05);
+    background: #45a049;
+}
 </style>
 </head>
 <body>
@@ -173,6 +196,12 @@ Shiraki
 
 <div id="result"></div>
 
+<!-- ===== NÚT MỞ PDF ===== -->
+<div id="pdfButtons">
+    <button class="pdfBtn" onclick="openPDF('./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf')">Mở PDF 1</button>
+    <button class="pdfBtn" onclick="openPDF('./assets/pdfs/250101_朝礼の流れ（スピーチ番号資料付）.pdf')">Mở PDF 2</button>
+</div>
+
 <script>
 const wheel = document.getElementById('wheelCanvas');
 const ctx = wheel.getContext('2d');
@@ -192,7 +221,7 @@ let dialogVisible = false;
 let animationFrameId = null;
 let fireAnimationFrameId = null;
 let lastClick = 0;
-let hueOffset = 0; // màu chuyển động
+let hueOffset = 0;
 
 function parseText(t){ return t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); }
 
@@ -319,17 +348,14 @@ function animateHue(){
     hueOffset+=1;
     if(hueOffset>360) hueOffset=0;
     drawWheel();
-    // Update nút SPIN
     const btnHue = (hueOffset+30)%360;
     spinCenter.style.background = `hsl(${btnHue},70%,55%)`;
     spinCenter.style.color = `hsl(${(btnHue+180)%360},80%,95%)`;
-    // Update dialog
     const dialogHue = (hueOffset+60)%360;
     alertDialog.style.background =
         `linear-gradient(135deg,hsl(${dialogHue},70%,65%), hsl(${(dialogHue+60)%360},80%,70%))`;
     alertText.style.color = `hsl(${(dialogHue+180)%360},80%,50%)`;
     closeBtn.style.color = `hsl(${(dialogHue+200)%360},70%,40%)`;
-    // Update kết quả
     const resultHue = (hueOffset+90)%360;
     resultDiv.style.color = `hsl(${resultHue},80%,60%)`;
     requestAnimationFrame(animateHue);
@@ -345,6 +371,11 @@ spinCenter.addEventListener('click',()=>{
 itemsArea.addEventListener('input',update);
 update();
 animateHue();
+
+// ===== MỞ PDF =====
+function openPDF(path){
+    window.open(path, '_blank');
+}
 </script>
 </body>
 </html>
