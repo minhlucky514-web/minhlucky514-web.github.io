@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>朝礼ゲーム</title>
-<link rel="apple-touch-icon" href="./assets/images/doraemon.png">
-<link rel="shortcut icon" href="./assets/images/doraemon.png">
+<link rel="apple-touch-icon" href="../assets/images/doraemon.png">
+<link rel="shortcut icon" href="../assets/images/doraemon.png">
 <style>
     @import "https://fonts.googleapis.com/css2?family=Aleo&display=swap";
 
@@ -77,9 +77,9 @@
     <div id="container">
     <div id="lottie"> </div>
 
-    <div id="enter">
+    <!-- <div id="enter">
         <button id="enter" onclick="start()">enter</button>
-    </div>
+    </div> -->
     </div>
     <canvas class="webgl"></canvas>
 
@@ -89,6 +89,7 @@
         window.start3 = true;
         anim.stop();
     }
+    window.addEventListener("DOMContentLoaded", () => start());
     </script>
     <script type="module">
     import * as THREE from "https://esm.sh/three@0.174.0";
